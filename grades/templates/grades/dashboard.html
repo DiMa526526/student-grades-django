@@ -1,0 +1,85 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Учёт успеваемости</title>
+    <link rel="stylesheet" href="{% static 'grades/css/styles.css' %}">
+</head>
+<body class="dashboard-page">
+    <div class="sidebar">
+        <h2>Дисциплины</h2>
+        {% for discipline in disciplines %}
+            <div class="discipline" onclick="location.href='?discipline={{ discipline.id }}'">
+                {{ discipline.name }}
+            </div>
+            {% if selected_discipline == discipline.id %}
+                {% for group in groups %}
+                    <div class="group" onclick="location.href='?discipline={{ discipline.id }}&group={{ group.id }}'">
+                        {{ group.name }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+        <button class="logout-btn" onclick="location.href='{% url 'logout' %}'">Выйти</button>
+    </div>
+
+    <div class="main">
+        {% if selected_group %}
+            <h2>Успеваемость группы {{ selected_group_name }}</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="student-name">Имя студента</th>
+                            <th colspan="{{ date_columns|length }}">Дата</th>
+                            <th rowspan="2">Средний балл</th>
+                        </tr>
+                        <tr>
+                            {% for date in date_columns %}
+                                <th class="date-header">{{ date|date:"d.m" }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students_data %}
+                        <tr>
+                            <td class="student-name">{{ student.name }}</td>
+                            {% for grade in student.grades %}
+                                <td class="grade-cell {% if not grade.value %}empty{% endif %}"
+                                    data-student-id="{{ student.id }}"
+                                    data-date="{{ grade.date|date:'Y-m-d' }}"
+                                    {% if grade.id %}data-grade-id="{{ grade.id }}"{% endif %}>
+                                    {{ grade.value|default:"" }}
+                                </td>
+                            {% endfor %}
+                            <td class="average-cell">{{ student.average|floatformat:1 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Модальное окно для добавления/редактирования оценки -->
+    <div id="gradeModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">Добавить оценку</h3>
+            <div id="dateInputContainer" style="display: none; margin-bottom: 15px;">
+                <input type="date" id="newDateInput" class="grade-input">
+            </div>
+            <input type="number" id="gradeInput" class="grade-input" min="2" max="5" placeholder="Введите оценку (2-5)">
+            <div class="modal-buttons">
+                <button id="deleteBtn" class="modal-btn delete-btn" style="display: none;">Удалить</button>
+                <div>
+                    <button id="cancelBtn" class="modal-btn cancel-btn">Отмена</button>
+                    <button id="submitBtn" class="modal-btn submit-btn">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'grades/js/dashboard.js' %}"></script>
+</body>
+</html>
